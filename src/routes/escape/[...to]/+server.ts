@@ -1,10 +1,11 @@
-import { load as cload } from "cheerio";
+import { load as cheerioLoad } from "cheerio";
+import acorn from "acorn"
+import type { RequestHandler } from "./$types";
 
-/** @type {import('./$types').RequestHandler} */
-export const GET = async ({url}) => {
+export const GET: RequestHandler = async ({url, params}) => {2
   // some constants
-  console.log(url)
-  const theirUrl: string = url.search.substring(1) || 'https://www.example.com';
+  console.log(params)
+  const theirUrl: string = params.to;
   const dmc = theirUrl.indexOf("/", 8);
   const domain = dmc == -1 ? theirUrl : theirUrl.substring(0, dmc);
   const relativeUrl = dmc == -1 ? "" : theirUrl.substring(8 + domain.length);
@@ -24,12 +25,23 @@ export const GET = async ({url}) => {
       data = await res.text();
     }
 
+    console.log(reqType)
+
+    //javascript parse and replace with acorn
+    if(reqType && reqType.includes("javascript")) {
+      if(typeof data != "string") {
+        return new Response("No.", {status: 500})
+      }
+      let nodes = acorn.parse(data, {ecmaVersion: 2020});
+      
+    }
+
     if (reqType && !reqType.startsWith("text/html")) return new Response(data, { headers: { 'content-type': reqType } });
 
-    const $ = cload(data);
+    const $ = cheerioLoad(data);
     
     $('*').each((i, element) => {
-      const urlAttributes = ['href', 'src', 'action', 'cite', 'data', 'formaction', 'href', 'icon', 'longdesc', 'manifest', 'poster', 'src', 'usemap'];
+      const urlAttributes = ['href', 'src', 'action', 'cite', 'data', 'formaction', 'icon', 'longdesc', 'manifest', 'poster', 'usemap'];
       
       for (const attr of urlAttributes) {
         const oldUrl = $(element).attr(attr);
@@ -42,7 +54,7 @@ export const GET = async ({url}) => {
     return new Response($.html(), { headers: { 'content-type': 'text/html' } });
 
     
-  } catch (e) {
+  } catch (e: any) {
     return new Response(e.message, { status: 500 });
   }
 

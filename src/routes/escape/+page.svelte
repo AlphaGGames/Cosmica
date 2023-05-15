@@ -5,7 +5,7 @@
 
 	let searchIt = () => {
 		if (url) {
-			goto(`/escape/to?${url}`)
+			goto(`/escape/to?https://google.com/search?q=${url}`)
 		} else {
 			alert("Please enter a URL");
 		}
