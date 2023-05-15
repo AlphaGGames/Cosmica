@@ -3,11 +3,12 @@ import { load as cload } from "cheerio";
 /** @type {import('./$types').RequestHandler} */
 export const GET = async ({url}) => {
   // some constants
+  console.log(url)
   const theirUrl: string = url.search.substring(1) || 'https://www.example.com';
   const dmc = theirUrl.indexOf("/", 8);
   const domain = dmc == -1 ? theirUrl : theirUrl.substring(0, dmc);
   const relativeUrl = dmc == -1 ? "" : theirUrl.substring(8 + domain.length);
-  const ourUrl = url.origin + url.pathname + "?";
+  const ourUrl = url.pathname + "?";
   
   // get the requested content
   try {
