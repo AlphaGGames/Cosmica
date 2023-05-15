@@ -4,12 +4,11 @@ import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({url, params}) => {2
   // some constants
-  console.log(params)
   const theirUrl: string = params.to;
   const dmc = theirUrl.indexOf("/", 8);
   const domain = dmc == -1 ? theirUrl : theirUrl.substring(0, dmc);
   const relativeUrl = dmc == -1 ? "" : theirUrl.substring(8 + domain.length);
-  const ourUrl = url.pathname + "?";
+  const ourUrl = url.host + "/escape/";
   
   // get the requested content
   try {
