@@ -2,32 +2,26 @@ import { load as cheerioLoad } from "cheerio";
 import acorn from "acorn"
 import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = async ({url, params}) => {2
+export const GET: RequestHandler = async ({url, params}) => {
   // some constants
+  console.log(url)
+
   const theirUrl: string = params.to;
   const dmc = theirUrl.indexOf("/", 8);
   const domain = dmc == -1 ? theirUrl : theirUrl.substring(0, dmc);
   const relativeUrl = dmc == -1 ? "" : theirUrl.substring(8 + domain.length);
-  const ourUrl = url.host + "/escape/";
+  const ourUrl = url.origin + "/escape/";
   
   // get the requested content
   try {
     const res = await fetch(theirUrl);
-    let data;
+    let data: any;
     const reqType = res.headers.get('content-type');
-
-    // send the request content back if not html
-    // otherwise parse it with cheerio
-    if (reqType?.startsWith("image")) {
-      data = await res.blob();
-    } else {
-      data = await res.text();
-    }
-
     console.log(reqType)
 
     //javascript parse and replace with acorn
     if(reqType && reqType.includes("javascript")) {
+      data = await res.text();
       if(typeof data != "string") {
         return new Response("No.", {status: 500})
       }
@@ -35,8 +29,29 @@ export const GET: RequestHandler = async ({url, params}) => {2
       
     }
 
-    if (reqType && !reqType.startsWith("text/html")) return new Response(data, { headers: { 'content-type': reqType } });
+    //css parse and replace with our own urls
+    if(reqType && reqType.includes("css")) {
+      data = await res.text();
+      if(typeof data != "string") {
+        return new Response("No.", {status: 500})
+      }
+      data = data.replace(/url\((.*?)\)/g, (match, p1) => {
+        return `url(${convertUrl(p1)})`
+      })
 
+      return new Response(data, { headers: { 'content-type': reqType } });
+    }
+
+    // send the request content back if not html
+    if (reqType && !reqType.startsWith("text/html")) {
+      data = await res.blob();
+      return new Response(data, { headers: { 'content-type': reqType } });
+    }
+
+
+    data = await res.text();
+
+    //html time baby
     const $ = cheerioLoad(data);
     
     $('*').each((i, element) => {
@@ -48,7 +63,30 @@ export const GET: RequestHandler = async ({url, params}) => {2
           $(element).attr(attr, convertUrl(oldUrl));
         }
       }
+
+      // replace inline styles
+    const oldStyle = $(element).attr('style');
+    if (oldStyle) {
+      const newStyle = oldStyle.replace(/url\((.*?)\)/g, (match, p1) => {
+        return `url(${convertUrl(p1)})`
+      })
+      $(element).attr('style', newStyle);
+      }
+
     });
+
+    //replace style tags
+    $('style').each((i, element) => {
+      const oldStyle = $(element).html();
+      if (oldStyle) {
+        const newStyle = oldStyle.replace(/url\((.*?)\)/g, (match, p1) => {
+          return `url(${convertUrl(p1)})`
+        })
+        $(element).html(newStyle);
+      }
+    });
+
+
     
     return new Response($.html(), { headers: { 'content-type': 'text/html' } });
 
@@ -57,6 +95,8 @@ export const GET: RequestHandler = async ({url, params}) => {2
     return new Response(e.message, { status: 500 });
   }
 
+
+  //TODO: make this better
   function convertUrl(oldUrl: string) {
     if (oldUrl.startsWith(ourUrl)) {
       return oldUrl;
