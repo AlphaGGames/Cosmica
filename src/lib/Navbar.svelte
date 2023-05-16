@@ -34,6 +34,8 @@
 		background: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(10px);
 		z-index: 100;
+		top: 0;
+		left: 0;
 	}
 	.left {
 		float: left;

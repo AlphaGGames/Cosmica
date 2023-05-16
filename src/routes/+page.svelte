@@ -4,7 +4,8 @@
 	let blobmove = (e: MouseEvent) => {
 		blob.animate([
 			{top: `${e.clientY}px`,
-			left: `${e.clientX}px`}
+			left: `${e.clientX}px`,
+			opacity: 0.15},
 		], {
 			duration: 5000,
 			fill: "forwards"
@@ -107,7 +108,6 @@
 		width: 100%;
 		height: 100%;
 		backdrop-filter: blur(50px);
-		background: rgba(0,0,0,0.5);
 	}
 	.blob {
 		position: fixed;
@@ -119,7 +119,7 @@
 		border-radius: 50%;
 		translate: -50% -50%;
 		z-index: -1;
-		opacity: 0.2;
+		opacity: 0;
 		
 		animation: rotatescale 5s infinite ease-in-out;
 
