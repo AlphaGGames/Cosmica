@@ -24,6 +24,7 @@
 
 <style>
 	nav {
+		position: fixed;
 		width: 80%;
 		padding-left: 10%;
 		padding-top: 10px;
@@ -32,6 +33,7 @@
 		height: 50px;
 		background: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(10px);
+		z-index: 100;
 	}
 	.left {
 		float: left;
